@@ -2,7 +2,6 @@ import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from
 import { HttpAdapterHost } from '@nestjs/core';
 import { Request } from "express";
 import { DEFAULT_MESSAGE } from "../constants/auth.const";
-import { IMessage } from "../types/auth.type";
 
 @Catch(HttpException)
 export class CatchEverythingFilter implements ExceptionFilter {

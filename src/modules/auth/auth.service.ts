@@ -1,7 +1,7 @@
 
 import { UsersService } from '@/modules/users/users.service';
-import { Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { SignInDto } from './dto/auth.dto';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { SignInDto } from './dto/signin.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import crypto from 'crypto';
@@ -13,7 +13,9 @@ import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import { IAuthService } from '@/interfaces/auth.interface';
-
+import { ChangePasswordDto } from './dto/changePassword.dto';
+import { IUserInRequest } from '@/common/types/user.type';
+import { UpdateResult } from 'typeorm/browser';
 
 @Injectable()
 export class AuthService implements IAuthService {
@@ -24,7 +26,7 @@ export class AuthService implements IAuthService {
         @InjectRedis()
         private readonly redis: Redis,
         @InjectRepository(RefreshTokens)
-        private readonly refreshTokenRepo: Repository<RefreshTokens>
+        private readonly refreshTokenRepo: Repository<RefreshTokens>,
     ) { }
 
 
@@ -72,12 +74,29 @@ export class AuthService implements IAuthService {
                 const ttl = decoded.exp - currentTime;
 
                 if (ttl > 0) {
-                    const redisKey = `blacklist:${token}`;
-                    await this.redis.set(redisKey, 'true', 'EX', ttl);
+                    const blacklistKey = `blacklist:${token}`;
+                    await this.redis.set(blacklistKey, 'true', 'EX', ttl);
                 }
             }
         } catch (error) {
-            throw new InternalServerErrorException();
+            throw new InternalServerErrorException("Token invalid or expires");
         }
+    }
+
+    async changePassword(dto: ChangePasswordDto, currentUser: IUserInRequest, token: string, refreshToken: string): Promise<void> {
+        const user = await this.usersService.findOneById(currentUser.id);
+        if (!user) throw new NotFoundException("User not exists");
+
+        const isPasswordMatch = await bcrypt.compare(dto.oldPassword, user.password);
+        if (!isPasswordMatch) throw new BadRequestException("Old password is incorrect");
+
+        const result = await this.refreshTokenRepo.softDelete({ value: refreshToken });
+        if (result.affected === 0) {
+            throw new NotFoundException("Token not exists");
+        }
+
+        await this.blacklistTokenInRedis(token);
+
+        await this.usersService.updatePassword(currentUser.id, dto.newPassword);
     }
 }

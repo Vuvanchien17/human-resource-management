@@ -1,6 +1,6 @@
-import { Body, Controller, HttpCode, HttpStatus, Inject, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Inject, Post, Req, Res, Patch } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { SignInDto } from './dto/auth.dto';
+import { SignInDto } from './dto/signin.dto';
 import { Request, Response } from 'express';
 import { Public } from '@/decorators/isPublic.decorator';
 import { LoginToken } from './models/auth.model';
@@ -8,6 +8,9 @@ import { Cookies } from '@/decorators/cookies.decorator';
 import { AUTH_SERVICE } from '@/common/constants/auth.const';
 import { IAuthService } from '@/interfaces/auth.interface';
 import { ExtractToken } from '@/decorators/token.decorator';
+import { ChangePasswordDto } from './dto/changePassword.dto';
+import { CurrentUser } from '@/decorators/currentUser.decorator';
+import { IUserInRequest } from '@/common/types/user.type';
 
 @Controller('auth')
 export class AuthController {
@@ -41,5 +44,12 @@ export class AuthController {
         });
 
         return { message: "Logout success" }
+    }
+
+    @HttpCode(HttpStatus.OK)
+    @Patch('change-password')
+    async changePassword(@Body() dto: ChangePasswordDto, @CurrentUser() curentUser: IUserInRequest, @ExtractToken() token: string, @Cookies('refresh-token') refreshToken: string): Promise<{ message: string }> {
+        await this.authService.changePassword(dto, curentUser, token, refreshToken);
+        return { message: "Change password success" }
     }
 }

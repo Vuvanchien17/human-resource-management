@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, ValidationPipe } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { DatabaseModule } from './core/database/database.module';
-import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { AuthGuard } from './guards/auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -19,11 +19,11 @@ import redisConfig from './config/redis.config';
     load: [authConfig, redisConfig]
   }), RedisModule.forRootAsync({
     imports: [ConfigModule],
-    inject: [ConfigService],
     useFactory: (configService: ConfigService) => ({
       type: 'single',
       url: `redis://${configService.get<string>('REDIS_HOST')}:${configService.get<number>('REDIS_PORT')}`,
-    })
+    }),
+    inject: [ConfigService],
   })],
   controllers: [AppController],
   providers: [AppService, {
@@ -35,6 +35,10 @@ import redisConfig from './config/redis.config';
     }, {
       provide: APP_FILTER,
       useClass: CatchEverythingFilter
+    },
+    {
+      provide: APP_PIPE,
+      useClass: ValidationPipe
     }],
 })
 export class AppModule { }
