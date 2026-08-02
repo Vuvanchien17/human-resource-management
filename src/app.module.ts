@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, ValidationPipe, Global } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { DatabaseModule } from './core/database/database.module';
-import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { AuthGuard } from './guards/auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -12,19 +12,43 @@ import authConfig from './config/auth.config';
 import { CatchEverythingFilter } from './common/exceptions/all-exception.filter';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import redisConfig from './config/redis.config';
+import nodeMailerConfig from './config/nodeMailer.config';
+import { TransformInterceptor } from './interceptors/transform.interceptor';
+import { MailerModule } from '@nestjs-modules/mailer';
+
 
 @Module({
-  imports: [UsersModule, AuthModule, DatabaseModule, ConfigModule.forRoot({
-    isGlobal: true,
-    load: [authConfig, redisConfig]
-  }), RedisModule.forRootAsync({
-    imports: [ConfigModule],
-    inject: [ConfigService],
-    useFactory: (configService: ConfigService) => ({
-      type: 'single',
-      url: `redis://${configService.get<string>('REDIS_HOST')}:${configService.get<number>('REDIS_PORT')}`,
+  imports: [UsersModule, AuthModule, DatabaseModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [authConfig, redisConfig, nodeMailerConfig]
+    }),
+    RedisModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'single',
+        url: `redis://${configService.get<string>('REDIS_HOST')}:${configService.get<number>('REDIS_PORT')}`,
+      }),
+      inject: [ConfigService],
+    }),
+    MailerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        transport: {
+          host: configService.get<string>('mailer.MAILER_HOST'),
+          port: configService.get<number>('mailer.MAILER_PORT'),
+          auth: {
+            user: configService.get<string>('mailer.MAILER_USER'),
+            pass: configService.get<string>('mailer.MAILER_APP_PASS'),
+          }
+        },
+        defaults: {
+          from: '"No Reply" <JE@gmail.com>'
+        }
+      })
     })
-  })],
+  ],
   controllers: [AppController],
   providers: [AppService, {
     provide: APP_GUARD,
@@ -35,6 +59,13 @@ import redisConfig from './config/redis.config';
     }, {
       provide: APP_FILTER,
       useClass: CatchEverythingFilter
+    },
+    {
+      provide: APP_PIPE,
+      useClass: ValidationPipe
+    }, {
+      provide: APP_INTERCEPTOR,
+      useClass: TransformInterceptor
     }],
 })
 export class AppModule { }

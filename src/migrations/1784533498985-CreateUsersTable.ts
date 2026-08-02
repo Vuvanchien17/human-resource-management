@@ -11,5 +11,6 @@ export class CreateUsersTable1784533498985 implements MigrationInterface {
         await queryRunner.query(`DROP INDEX \`IDX_97672ac88f789774dd47f7c8be\` ON \`users\``);
         await queryRunner.query(`DROP TABLE \`users\``);
     }
-
 }
+
+
