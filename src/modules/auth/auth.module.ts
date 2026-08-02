@@ -10,12 +10,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { AUTH_SERVICE } from '@/common/constants/auth.const';
 import { Users } from '../users/users.entity';
+import { Otps } from './entities/otps.entity';
+import { DatabaseModule } from '@/core/database/database.module';
 
 
 @Module({
   imports: [
     UsersModule,
-    TypeOrmModule.forFeature([RefreshTokens]),
+    TypeOrmModule.forFeature([RefreshTokens, Otps]),
     ConfigModule,
     JwtModule.registerAsync({
       global: true,

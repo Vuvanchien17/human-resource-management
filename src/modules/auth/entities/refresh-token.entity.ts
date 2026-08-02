@@ -1,13 +1,13 @@
 import { Users } from "@/modules/users/users.entity";
 import { timestamp } from "rxjs";
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class RefreshTokens {
     @PrimaryGeneratedColumn()
     id: number
 
-    @Column({ length: 500 })
+    @Column({ length: 500, name: "value" })
     value: string
 
     @Column({ type: 'timestamp' })
@@ -23,5 +23,6 @@ export class RefreshTokens {
     deletedAt: Date
 
     @ManyToOne(() => Users, (user) => user.refreshTokens)
+    @JoinColumn({ name: 'userId' })
     user: Users
 }
