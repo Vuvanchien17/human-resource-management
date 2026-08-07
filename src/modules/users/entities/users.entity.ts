@@ -1,9 +1,10 @@
 
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { RefreshTokens } from "../auth/entities/refresh-token.entity";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { RefreshTokens } from "../../auth/entities/refresh-token.entity";
 import { UserRole } from "@/common/enum/role.enum";
+import { Employees } from "@/modules/employees/entities/employees.entity";
 
-@Entity()
+@Entity({ name: 'Users' })
 export class Users {
     @PrimaryGeneratedColumn()
     id: number
@@ -17,13 +18,13 @@ export class Users {
     @Column({ type: 'enum', enum: UserRole, default: UserRole.EMPLOYEE })
     role: UserRole
 
-    @CreateDateColumn({ type: 'timestamp' })
+    @CreateDateColumn({ type: 'timestamptz' })
     createdAt: Date
 
-    @UpdateDateColumn({ type: 'timestamp', nullable: true })
+    @UpdateDateColumn({ type: 'timestamptz', nullable: true })
     updatedAt!: Date
 
-    @DeleteDateColumn({ type: 'timestamp', nullable: true })
+    @DeleteDateColumn({ type: 'timestamptz', nullable: true })
     deletedAt!: Date
 
     @Column({ type: 'boolean', default: true })
@@ -31,4 +32,7 @@ export class Users {
 
     @OneToMany(() => RefreshTokens, (refreshToken) => refreshToken.user)
     refreshTokens: RefreshTokens[]
+
+    @OneToOne(() => Employees, (employee) => employee.user)
+    employee: Employees
 }

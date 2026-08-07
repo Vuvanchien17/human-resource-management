@@ -2,7 +2,9 @@ export const IS_PUBLIC_KEY = 'isPublic'
 
 export const ROLES_KEY = 'roles';
 
-export const AUTH_SERVICE = Symbol('IAuthservice');
+export const AUTH_SERVICE = Symbol('IAuthService');
+
+export const DEPARTMENT_SERVICE = Symbol('IDepartmentService')
 
 export const DEFAULT_MESSAGE = 'Internal server error';
 
