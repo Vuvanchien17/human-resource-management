@@ -1,18 +1,22 @@
 import { IJwtPayload } from "@/common/types/auth.type";
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
+import { CanActivate, ExecutionContext, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from '@nestjs/jwt';
 import { Request } from "express";
 import { UsersService } from '../modules/users/users.service';
 import { Reflector } from "@nestjs/core";
-import { IS_PUBLIC_KEY } from "@/common/constants/auth.const";
+import { EMPLOYEE_SERVICE, IS_PUBLIC_KEY } from "@/common/constants/auth.const";
 import Redis from "ioredis";
 import { InjectRedis } from "@nestjs-modules/ioredis";
+import { Users } from "@/modules/users/entities/users.entity";
+import { IEmployeesService } from "@/interfaces/employees.interface";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
     constructor(
         private readonly jwtService: JwtService,
         private readonly usersService: UsersService,
+        @Inject(EMPLOYEE_SERVICE)
+        private readonly employeeService: IEmployeesService,
         private readonly reflector: Reflector,
         @InjectRedis()
         private readonly redis: Redis,
@@ -33,8 +37,9 @@ export class AuthGuard implements CanActivate {
 
         try {
             const payload = await this.jwtService.verifyAsync<IJwtPayload>(token);
-            const currentUser = await this.usersService.findOneById(payload.sub);
-            request['user'] = { id: currentUser?.id, role: currentUser?.role };
+            const currentUser = await this.usersService.findOneById(payload.sub) as Users;
+            const currentEmployee = await this.employeeService.findOneByUserId(currentUser.id);
+            request['user'] = { id: currentUser?.id, role: currentUser?.role, employeeId: currentEmployee.id };
         } catch (error) {
             throw new UnauthorizedException("Unverified account");
         }

@@ -6,6 +6,10 @@ export const AUTH_SERVICE = Symbol('IAuthService');
 
 export const DEPARTMENT_SERVICE = Symbol('IDepartmentService')
 
+export const EDUCATION_SERVICE = Symbol('IEducationService');
+
+export const EMPLOYEE_SERVICE = Symbol('IEmployeeService');
+
 export const DEFAULT_MESSAGE = 'Internal server error';
 
 export const RESPONSE_MESSGAE = Symbol('Response message');

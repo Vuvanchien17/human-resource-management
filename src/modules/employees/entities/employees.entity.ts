@@ -1,7 +1,8 @@
 import { Gender } from "@/common/enum/gender.enum";
 import { Users } from "@/modules/users/entities/users.entity";
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 import { Departments } from "../../departments/entities/departments.entity";
+import { Educations } from "@/modules/educations/entities/educations.entity";
 
 @Entity({ name: 'Employees' })
 export class Employees {
@@ -51,4 +52,7 @@ export class Employees {
     @ManyToOne(() => Departments, (department) => department.employees)
     @JoinColumn({ name: 'departmentId' })
     department: Departments
+
+    @OneToMany(() => Educations, education => education.employee)
+    educations: Educations[]
 }

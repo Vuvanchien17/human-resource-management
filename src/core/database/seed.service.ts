@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Users } from '@/modules/users/entities/users.entity';
 import { UserRole } from '@/common/enum/role.enum';
+import { Employees } from '@/modules/employees/entities/employees.entity';
 
 
 @Injectable()
@@ -12,6 +13,8 @@ export class SeederService implements OnApplicationBootstrap {
     constructor(
         @InjectRepository(Users)
         private readonly userRepository: Repository<Users>,
+        @InjectRepository(Employees)
+        private readonly employeeRepo: Repository<Employees>,
     ) { }
 
     async onApplicationBootstrap() {
@@ -30,5 +33,15 @@ export class SeederService implements OnApplicationBootstrap {
             });
             console.log('✅ Seeded default admin user!');
         }
+
+        // await this.employeeRepo.save({
+        //     fullName: "Vuvanchien",
+        //     position: "admin_system",
+        //     salary: 1000000,
+        //     departmentId: 1,
+        //     userId: 1,
+        //     code: "NV0002"
+        // })
+
     }
 }

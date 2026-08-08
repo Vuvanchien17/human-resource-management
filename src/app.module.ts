@@ -20,6 +20,10 @@ import { DepartmentsModule } from './modules/departments/departments.module';
 import { SeederService } from './core/database/seed.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Users } from './modules/users/entities/users.entity';
+import { Educations } from './modules/educations/entities/educations.entity';
+import { EducationsModule } from './modules/educations/educations.module';
+import { Employees } from './modules/employees/entities/employees.entity';
+
 
 
 @Module({
@@ -53,7 +57,7 @@ import { Users } from './modules/users/entities/users.entity';
         }
       })
     }),
-    DepartmentsModule, TypeOrmModule.forFeature([Users])
+    DepartmentsModule, TypeOrmModule.forFeature([Users, Employees]), EducationsModule
   ],
   controllers: [AppController],
   providers: [AppService, {

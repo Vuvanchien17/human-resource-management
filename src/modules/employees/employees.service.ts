@@ -8,15 +8,24 @@ import { Employees } from './entities/employees.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryRunner } from 'typeorm';
 import { Departments } from '../departments/entities/departments.entity';
+import { IEmployeesService } from './../../interfaces/employees.interface';
 
 @Injectable()
-export class EmployeesService {
+export class EmployeesService implements IEmployeesService {
     constructor(
         private readonly usersService: UsersService,
         private readonly dataSource: DataSource,
         @InjectRepository(Employees)
         private readonly employeeRepo: Repository<Employees>
     ) { }
+
+    async findOneByUserId(id: number): Promise<Employees> {
+        return await this.employeeRepo.findOneBy({ userId: id }) as Employees;
+    }
+
+    async findOneById(id: number): Promise<Employees> {
+        return await this.employeeRepo.findOneBy({ id: id }) as Employees;
+    }
 
     async createEmployee(dto: CreateEmployeesDto): Promise<Employees> {
         const exist = await this.usersService.findOneByEmail(dto.email);
