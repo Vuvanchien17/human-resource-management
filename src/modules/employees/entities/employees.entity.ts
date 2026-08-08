@@ -3,6 +3,7 @@ import { Users } from "@/modules/users/entities/users.entity";
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 import { Departments } from "../../departments/entities/departments.entity";
 import { Educations } from "@/modules/educations/entities/educations.entity";
+import { Skills } from "@/modules/skills/entities/skills.entity";
 
 @Entity({ name: 'Employees' })
 export class Employees {
@@ -55,4 +56,7 @@ export class Employees {
 
     @OneToMany(() => Educations, education => education.employee)
     educations: Educations[]
+
+    @OneToMany(() => Skills, skill => skill.employee)
+    skills: Skills[]
 }

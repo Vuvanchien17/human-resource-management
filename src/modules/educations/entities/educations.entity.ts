@@ -31,5 +31,4 @@ export class Educations {
     @ManyToOne(() => Employees, employee => employee.educations)
     @JoinColumn({ name: 'employeeId' })
     employee: Employees
-
 }

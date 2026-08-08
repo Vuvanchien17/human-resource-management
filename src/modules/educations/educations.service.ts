@@ -35,8 +35,6 @@ export class EducationsService implements IEducationsService {
             throw new ForbiddenException('You do not have permission')
         }
 
-        console.log("CurrentUser:", currentUser);
-        console.log("dto:", dto);
         return await this.educationRepo.save({
             id: id,
             ...dto,
