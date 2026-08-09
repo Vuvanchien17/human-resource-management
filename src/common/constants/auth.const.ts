@@ -14,6 +14,8 @@ export const SKILL_SERVICE = Symbol('ISkillsService');
 
 export const LEAVE_SERVICE = Symbol('ILeavesService');
 
+export const ATTENDANCE_SERVICE = Symbol('IAttendancesService');
+
 export const DEFAULT_MESSAGE = 'Internal server error';
 
 export const RESPONSE_MESSGAE = Symbol('Response message');
