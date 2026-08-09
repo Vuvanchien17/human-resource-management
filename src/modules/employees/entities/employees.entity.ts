@@ -4,6 +4,7 @@ import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, One
 import { Departments } from "../../departments/entities/departments.entity";
 import { Educations } from "@/modules/educations/entities/educations.entity";
 import { Skills } from "@/modules/skills/entities/skills.entity";
+import { Leaves } from "@/modules/leaves/entities/leaves.entity";
 
 @Entity({ name: 'Employees' })
 export class Employees {
@@ -59,4 +60,10 @@ export class Employees {
 
     @OneToMany(() => Skills, skill => skill.employee)
     skills: Skills[]
+
+    @OneToMany(() => Leaves, leave => leave.employee)
+    requestedLeaves: Leaves[]
+
+    @OneToMany(() => Leaves, leave => leave.approvedBy)
+    approvedLeaves: Leaves[]
 }

@@ -9,6 +9,7 @@ import { Educations } from '@/modules/educations/entities/educations.entity';
 
 import { ConfigService } from '@nestjs/config';
 import { Skills } from '@/modules/skills/entities/skills.entity';
+import { Leaves } from '@/modules/leaves/entities/leaves.entity';
 
 export const AppDataSource = new DataSource({
     type: 'postgres',
@@ -17,7 +18,7 @@ export const AppDataSource = new DataSource({
     username: 'postgres',
     password: 'Vuvanchien2005',
     database: 'human_resource_management',
-    entities: [Users, RefreshTokens, Otps, Employees, Departments, Educations, Skills],
+    entities: [Users, RefreshTokens, Otps, Employees, Departments, Educations, Skills, Leaves],
     migrations: [join(__dirname, '../migrations/*{.ts,.js}')],
     synchronize: false,
 });
