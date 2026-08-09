@@ -6,6 +6,7 @@ import { Educations } from "@/modules/educations/entities/educations.entity";
 import { Skills } from "@/modules/skills/entities/skills.entity";
 import { Leaves } from "@/modules/leaves/entities/leaves.entity";
 import { Attendances } from "@/modules/attendances/entities/attendances.entity";
+import { Insurances } from "@/modules/insurances/entities/insurances.entity";
 
 @Entity({ name: 'Employees' })
 export class Employees {
@@ -70,4 +71,7 @@ export class Employees {
 
     @OneToMany(() => Attendances, attendance => attendance.employee)
     attendances: Attendances[]
+
+    @OneToOne(() => Insurances, insurance => insurance.employee)
+    insurance: Insurances
 }

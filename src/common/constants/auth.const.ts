@@ -16,6 +16,8 @@ export const LEAVE_SERVICE = Symbol('ILeavesService');
 
 export const ATTENDANCE_SERVICE = Symbol('IAttendancesService');
 
+export const INSURANCE_SERVICE = Symbol('IInsurancesService')
+
 export const DEFAULT_MESSAGE = 'Internal server error';
 
 export const RESPONSE_MESSGAE = Symbol('Response message');

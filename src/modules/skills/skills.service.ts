@@ -24,7 +24,7 @@ export class SkillsService implements ISkillsService {
         const exist = await this.employeesService.findOneById(id);
         if (!exist) throw new NotFoundException('Resourse not found');
 
-        return await this.skillRepo.save({ id: id, ...dto, employeeId: exist.id });
+        return await this.skillRepo.save({ ...dto, employeeId: exist.id });
     }
 
     async updateSkill(dto: UpdateSkillDto, id: number, currentUser: IUserInRequest): Promise<Skills> {

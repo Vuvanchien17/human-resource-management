@@ -25,7 +25,7 @@ export class EducationsService implements IEducationsService {
         const exist = await this.employeesService.findOneById(id);
         if (!exist) throw new NotFoundException("Resourse not found")
 
-        return await this.educationRepo.save({ id: id, ...dto, employeeId: exist.id });
+        return await this.educationRepo.save({ ...dto, employeeId: exist.id });
     }
 
     async updateEducation(dto: UpdateEducationDto, id: number, currentUser: IUserInRequest): Promise<Educations> {
