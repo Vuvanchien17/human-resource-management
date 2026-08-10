@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, DeleteDateColumn } from "typeorm";
 
 
-@Entity()
+@Entity({ name: 'Otps' })
 export class Otps {
     @PrimaryGeneratedColumn()
     id: number
@@ -12,12 +12,12 @@ export class Otps {
     @Column({ length: 10 })
     otpCode: string
 
-    @Column({ type: 'timestamp' })
+    @Column({ type: 'timestamptz' })
     expiresAt: Date
 
-    @CreateDateColumn({ type: 'timestamp' })
+    @CreateDateColumn({ type: 'timestamptz' })
     createdAt: Date
 
-    @DeleteDateColumn({ type: 'timestamp' })
+    @DeleteDateColumn({ type: 'timestamptz' })
     deletedAt: Date
 }

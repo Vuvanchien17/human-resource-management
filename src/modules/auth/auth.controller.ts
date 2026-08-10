@@ -1,6 +1,6 @@
 import { Body, Controller, HttpCode, HttpStatus, Inject, Post, Req, Res, Patch } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { SignInDto } from './dto/signin.dto';
+import { SignInDto } from './dtos/signin.dto';
 import { Request, Response } from 'express';
 import { Public } from '@/decorators/isPublic.decorator';
 import { LoginToken } from './models/auth.model';
@@ -8,13 +8,13 @@ import { Cookies } from '@/decorators/cookies.decorator';
 import { AUTH_SERVICE } from '@/common/constants/auth.const';
 import { IAuthService } from '@/interfaces/auth.interface';
 import { ExtractToken } from '@/decorators/token.decorator';
-import { ChangePasswordDto } from './dto/changePassword.dto';
+import { ChangePasswordDto } from './dtos/changePassword.dto';
 import { CurrentUser } from '@/decorators/currentUser.decorator';
 import { IUserInRequest } from '@/common/types/user.type';
 import { ResponseMessage } from '@/decorators/responseMessage.decorator';
-import { CreateOtpDto } from './dto/createOtp.dto';
-import { VerifyOtpDto } from './dto/verifyOtp.dto';
-import { ResetPasswordDto } from './dto/resetPassword.dto';
+import { CreateOtpDto } from './dtos/createOtp.dto';
+import { VerifyOtpDto } from './dtos/verifyOtp.dto';
+import { ResetPasswordDto } from './dtos/resetPassword.dto';
 
 @Controller('auth')
 export class AuthController {

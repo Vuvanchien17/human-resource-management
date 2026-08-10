@@ -15,10 +15,24 @@ import redisConfig from './config/redis.config';
 import nodeMailerConfig from './config/nodeMailer.config';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { EmployeesModule } from './modules/employees/employees.module';
+import { DepartmentsModule } from './modules/departments/departments.module';
+import { SeederService } from './core/database/seed.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Users } from './modules/users/entities/users.entity';
+import { Educations } from './modules/educations/entities/educations.entity';
+import { EducationsModule } from './modules/educations/educations.module';
+import { Employees } from './modules/employees/entities/employees.entity';
+import { SkillsModule } from './modules/skills/skills.module';
+import { LeavesModule } from './modules/leaves/leaves.module';
+import { AttendancesModule } from './modules/attendances/attendances.module';
+import { InsurancesModule } from './modules/insurances/insurances.module';
+import { PayrollsModule } from './modules/payrolls/payrolls.module';
+
 
 
 @Module({
-  imports: [UsersModule, AuthModule, DatabaseModule,
+  imports: [UsersModule, AuthModule, DatabaseModule, EmployeesModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [authConfig, redisConfig, nodeMailerConfig]
@@ -47,7 +61,8 @@ import { MailerModule } from '@nestjs-modules/mailer';
           from: '"No Reply" <JE@gmail.com>'
         }
       })
-    })
+    }),
+    DepartmentsModule, TypeOrmModule.forFeature([Users, Employees]), EducationsModule, SkillsModule, LeavesModule, AttendancesModule, InsurancesModule, PayrollsModule
   ],
   controllers: [AppController],
   providers: [AppService, {
@@ -66,6 +81,6 @@ import { MailerModule } from '@nestjs-modules/mailer';
     }, {
       provide: APP_INTERCEPTOR,
       useClass: TransformInterceptor
-    }],
+    }, SeederService],
 })
 export class AppModule { }

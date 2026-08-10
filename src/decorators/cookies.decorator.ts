@@ -7,3 +7,4 @@ export const Cookies = createParamDecorator((data: string, ctx: ExecutionContext
     const cookies = request.cookies as Record<string, string>;
     return data ? cookies?.[data] : cookies;
 })
+

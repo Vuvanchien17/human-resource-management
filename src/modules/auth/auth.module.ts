@@ -8,15 +8,19 @@ import { RefreshTokens } from './entities/refresh-token.entity';
 import { AuthGuard } from '@/guards/auth.guard';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RedisModule } from '@nestjs-modules/ioredis';
-import { AUTH_SERVICE } from '@/common/constants/auth.const';
-import { Users } from '../users/users.entity';
+import { AUTH_SERVICE, EMPLOYEE_SERVICE } from '@/common/constants/auth.const';
+import { Users } from '../users/entities/users.entity';
 import { Otps } from './entities/otps.entity';
 import { DatabaseModule } from '@/core/database/database.module';
+import { EmployeesService } from '../employees/employees.service';
+import { Employees } from '../employees/entities/employees.entity';
+import { EmployeesModule } from '../employees/employees.module';
 
 
 @Module({
   imports: [
     UsersModule,
+    EmployeesModule,
     TypeOrmModule.forFeature([RefreshTokens, Otps]),
     ConfigModule,
     JwtModule.registerAsync({

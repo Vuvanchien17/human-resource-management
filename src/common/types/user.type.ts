@@ -1,4 +1,7 @@
+import { UserRole } from "../enum/role.enum"
+
 export interface IUserInRequest {
     id: number
-    role: string
+    role: UserRole
+    employeeId: number
 }

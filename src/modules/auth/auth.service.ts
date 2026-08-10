@@ -1,7 +1,7 @@
 
 import { UsersService } from '@/modules/users/users.service';
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { SignInDto } from './dto/signin.dto';
+import { SignInDto } from './dtos/signin.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import crypto from 'crypto';
@@ -10,10 +10,10 @@ import { RefreshTokens } from './entities/refresh-token.entity';
 import { IsNull, Repository } from 'typeorm';
 import { IJwtPayload, ISignInResponse } from '@/common/types/auth.type';
 import { ConfigService } from '@nestjs/config';
-import Redis from 'ioredis';
+
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import { IAuthService } from '@/interfaces/auth.interface';
-import { ChangePasswordDto } from './dto/changePassword.dto';
+import { ChangePasswordDto } from './dtos/changePassword.dto';
 import { IUserInRequest } from '@/common/types/user.type';
 import { LoginToken } from './models/auth.model';
 import { MailerService } from '@nestjs-modules/mailer';
@@ -21,6 +21,7 @@ import otpTemplate from '@/common/utils/templateOTP';
 import { DataSource } from 'typeorm';
 import { Otps } from './entities/otps.entity';
 import { TTL_OTP } from '@/common/constants/auth.const';
+import Redis from 'ioredis';
 
 @Injectable()
 export class AuthService implements IAuthService {
@@ -133,10 +134,10 @@ export class AuthService implements IAuthService {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
         const queryRunner = this.dataSourse.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.startTransaction();
 
         try {
+            await queryRunner.connect();
+            await queryRunner.startTransaction();
             await queryRunner.manager.update(
                 Otps,
                 { email: email, deletedAt: IsNull() },
@@ -149,10 +150,9 @@ export class AuthService implements IAuthService {
             )
             await queryRunner.commitTransaction();
         } catch (error) {
-            console.log("Rollback");
             console.log("Error transaction:", error);
-            throw error;
             await queryRunner.rollbackTransaction();
+            throw error;
         } finally {
             await queryRunner.release();
         }
@@ -183,6 +183,8 @@ export class AuthService implements IAuthService {
             email,
             otpCode: otp
         })
+
+
         if (!exists) {
             throw new BadRequestException("Otp is incorrect");
         }

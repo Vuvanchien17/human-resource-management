@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { Roles } from "../decorators/roles.decorator";
 import { IUserInRequest } from "@/common/types/user.type";
@@ -18,7 +18,10 @@ export class RolesGuard implements CanActivate {
         const request = context.switchToHttp().getRequest<IRequest>();
         const user: IUserInRequest = request.user;
 
-        return this.matchRoles(requiredRoles, user.role);
+        const isMatchRole = this.matchRoles(requiredRoles, user.role);
+        if (!isMatchRole) throw new ForbiddenException('You do not have permission')
+
+        return true;
     }
 
     private matchRoles(roles: string[], role: string): boolean {

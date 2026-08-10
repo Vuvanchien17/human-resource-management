@@ -1,0 +1,84 @@
+import { Gender } from "@/common/enum/gender.enum";
+import { Users } from "@/modules/users/entities/users.entity";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import { Departments } from "../../departments/entities/departments.entity";
+import { Educations } from "@/modules/educations/entities/educations.entity";
+import { Skills } from "@/modules/skills/entities/skills.entity";
+import { Leaves } from "@/modules/leaves/entities/leaves.entity";
+import { Attendances } from "@/modules/attendances/entities/attendances.entity";
+import { Insurances } from "@/modules/insurances/entities/insurances.entity";
+import { Payrolls } from "@/modules/payrolls/entities/payrolls.entity";
+
+@Entity({ name: 'Employees' })
+export class Employees {
+    @PrimaryGeneratedColumn()
+    id: number
+
+    @Column({ length: 25, unique: true })
+    code: string
+
+    @Column({ length: 50 })
+    fullName: string
+
+    @CreateDateColumn({ type: 'timestamptz' })
+    joinDate: Date
+
+    @Column()
+    position: string
+
+    @Column()
+    salary: number
+
+    @Column({ unique: true, nullable: true })
+    phone?: string
+
+    @Column({ type: 'enum', enum: Gender, default: Gender.ORTHER })
+    gender?: Gender
+
+    @Column({ type: 'timestamptz', nullable: true })
+    birth?: Date
+
+    @Column({ length: 500, nullable: true })
+    address?: string
+
+    @Column({ length: 15, unique: true, nullable: true })
+    idCard?: string
+
+    @Column({ type: 'boolean', default: true })
+    isActive: true
+
+    @Column({ unique: true })
+    userId: number
+
+    @OneToOne(() => Users, (user) => user.employee)
+    @JoinColumn({ name: 'userId' })
+    user: Users
+
+    @Column()
+    departmentId: number
+
+    @ManyToOne(() => Departments, (department) => department.employees)
+    @JoinColumn({ name: 'departmentId' })
+    department: Departments
+
+    @OneToMany(() => Educations, education => education.employee)
+    educations: Educations[]
+
+    @OneToMany(() => Skills, skill => skill.employee)
+    skills: Skills[]
+
+    @OneToMany(() => Leaves, leave => leave.employee)
+    requestedLeaves: Leaves[]
+
+    @OneToMany(() => Leaves, leave => leave.approvedBy)
+    approvedLeaves: Leaves[]
+
+    @OneToMany(() => Attendances, attendance => attendance.employee)
+    attendances: Attendances[]
+
+    @OneToOne(() => Insurances, insurance => insurance.employee)
+    insurance: Insurances
+
+    @OneToMany(() => Payrolls, payroll => payroll.employee)
+    payrolls: Payrolls[]
+}
