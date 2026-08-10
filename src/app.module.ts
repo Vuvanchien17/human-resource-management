@@ -27,6 +27,7 @@ import { SkillsModule } from './modules/skills/skills.module';
 import { LeavesModule } from './modules/leaves/leaves.module';
 import { AttendancesModule } from './modules/attendances/attendances.module';
 import { InsurancesModule } from './modules/insurances/insurances.module';
+import { PayrollsModule } from './modules/payrolls/payrolls.module';
 
 
 
@@ -61,7 +62,7 @@ import { InsurancesModule } from './modules/insurances/insurances.module';
         }
       })
     }),
-    DepartmentsModule, TypeOrmModule.forFeature([Users, Employees]), EducationsModule, SkillsModule, LeavesModule, AttendancesModule, InsurancesModule
+    DepartmentsModule, TypeOrmModule.forFeature([Users, Employees]), EducationsModule, SkillsModule, LeavesModule, AttendancesModule, InsurancesModule, PayrollsModule
   ],
   controllers: [AppController],
   providers: [AppService, {

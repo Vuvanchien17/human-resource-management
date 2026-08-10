@@ -5,5 +5,6 @@ import { Departments } from "@/modules/departments/entities/departments.entity";
 export interface IDepartmentsService {
     createDepartment(dto: CreateDepartmentsDto): Promise<Departments>
     updateDeparment(dto: UpdateDepartmentDto, id: number): Promise<Departments>
-    deleteDepartment(id: number): Promise<void>
+    deleteDepartment(id: number): Promise<void>,
+    getDepartmentById(id: number): Promise<Departments>
 }

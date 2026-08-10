@@ -19,6 +19,10 @@ export class DepartmentsService implements IDepartmentsService {
         )
     }
 
+    async getDepartmentById(id: number): Promise<Departments> {
+        return await this.departmentsRepo.findOneBy({ id: id }) as Departments;
+    }
+
     async updateDeparment(dto: UpdateDepartmentDto, id: number): Promise<Departments> {
         return await this.departmentsRepo.save({ id: id, ...dto });
     }

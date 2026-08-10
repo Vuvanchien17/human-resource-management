@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateEmployeesDto, EmployeeResponse } from './dtos/createEmployees.dto';
 import { UsersService } from '../users/users.service';
 import { DataSource, Repository } from 'typeorm';
@@ -9,6 +9,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { QueryRunner } from 'typeorm';
 import { Departments } from '../departments/entities/departments.entity';
 import { IEmployeesService } from './../../interfaces/employees.interface';
+import { IUserInRequest } from '@/common/types/user.type';
+import { UserRole } from '@/common/enum/role.enum';
+import { DEPARTMENT_SERVICE } from '@/common/constants/auth.const';
+import { IDepartmentsService } from '@/interfaces/departments.interface';
+import { UpdateEmployeeDto } from './dtos/updateEmployee.dto';
 
 @Injectable()
 export class EmployeesService implements IEmployeesService {
@@ -16,7 +21,13 @@ export class EmployeesService implements IEmployeesService {
         private readonly usersService: UsersService,
         private readonly dataSource: DataSource,
         @InjectRepository(Employees)
-        private readonly employeeRepo: Repository<Employees>
+        private readonly employeeRepo: Repository<Employees>,
+
+        @InjectRepository(Departments)
+        private readonly departmentRepo: Repository<Departments>,
+
+        @Inject(DEPARTMENT_SERVICE)
+        private readonly departmentsService: IDepartmentsService
     ) { }
 
     async findOneByUserId(id: number): Promise<Employees> {
@@ -31,10 +42,7 @@ export class EmployeesService implements IEmployeesService {
         const exist = await this.usersService.findOneByEmail(dto.email);
         if (exist) throw new ConflictException('Account existed');
 
-
-
         const queryRunner = this.dataSource.createQueryRunner();
-
         try {
             await queryRunner.connect();
             await queryRunner.startTransaction();
@@ -97,4 +105,62 @@ export class EmployeesService implements IEmployeesService {
         }
         return nextCode;
     }
+
+    async getListEmployeesByDepartmentId(id: number, currentUser: IUserInRequest): Promise<Employees[]> {
+        const exist = await this.departmentsService.getDepartmentById(id);
+        if (!exist) throw new NotFoundException('Resource not found');
+
+        const currentEmployee = await this.employeeRepo.findOneBy({ id: currentUser.employeeId }) as Employees;
+
+        if (currentUser.role === UserRole.MANAGER && currentEmployee.departmentId !== id) {
+            throw new ForbiddenException('You do not have permission');
+        };
+
+        const listEmployees = await this.employeeRepo.createQueryBuilder("e")
+            .leftJoinAndSelect('e.department', 'dept')
+            .where('dept.id = :id', { id: id })
+            .andWhere('e.isActive = :isActive', { isActive: true })
+            .andWhere('e.id != :currentEmployeeId', { currentEmployeeId: currentEmployee.id })
+            .select(['e.id', 'e.code', 'e.fullName', 'e.position'])
+            .addSelect(['dept.id', 'dept.name'])
+            .getMany();
+
+        return listEmployees;
+
+    }
+
+    async getDetailEmployeeById(id: number, currentUser: IUserInRequest): Promise<Employees> {
+        const exist = await this.employeeRepo.findOneBy({ id: id });
+        if (!exist) throw new NotFoundException('Resource not found');
+
+        const currentEmployee = await this.employeeRepo.findOneBy({ id: currentUser.employeeId }) as Employees;
+        if (currentUser.role === UserRole.EMPLOYEE && currentEmployee.id !== id) {
+            throw new ForbiddenException('You do not have permission');
+        }
+
+        if (currentUser.role === UserRole.MANAGER && currentEmployee.departmentId !== exist.id) {
+            throw new ForbiddenException('You do not have permission');
+        }
+
+        return await this.employeeRepo.createQueryBuilder('e')
+            .where('e.id = :id', { id: id })
+            .andWhere('e.isActive = :isActive', { isActive: true })
+            .leftJoinAndSelect('e.department', 'dept')
+            .leftJoinAndSelect('e.skills', 'skills')
+            .leftJoinAndSelect('e.educations', 'edu')
+            .select(['e.id', 'e.code', 'e.fullName', 'e.position', 'e.gender', 'e.birth', 'e.address', 'dept.id', 'dept.name', 'skills.name', 'skills.level', 'edu.schoolName', 'edu.fieldStudy', 'edu.degree'])
+            .getOne() as Employees;
+    }
+
+    async updateEmployee(dto: UpdateEmployeeDto, employeeId: number, currentUser: IUserInRequest): Promise<Employees> {
+        const exist = await this.employeeRepo.findOneBy({ id: employeeId });
+        if (!exist) throw new NotFoundException('Resourse not found');
+
+        if (currentUser.employeeId !== exist.id && currentUser.role !== UserRole.ADMIN) {
+            throw new ForbiddenException('You do not have permission');
+        }
+
+        return await this.employeeRepo.save({ id: employeeId, ...dto });
+    }
+
 }

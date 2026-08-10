@@ -1,7 +1,7 @@
-import { Type } from "class-transformer";
-import { IsNotEmpty, Max, Min } from "class-validator";
+import { Type } from "class-transformer"
+import { IsNotEmpty, Max, Min } from "class-validator"
 
-export class GetAttendancesFilterDto {
+export class CalculatePayrollDto {
     @IsNotEmpty()
     @Type(() => Number)
     @Min(1)

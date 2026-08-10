@@ -7,6 +7,7 @@ import { Skills } from "@/modules/skills/entities/skills.entity";
 import { Leaves } from "@/modules/leaves/entities/leaves.entity";
 import { Attendances } from "@/modules/attendances/entities/attendances.entity";
 import { Insurances } from "@/modules/insurances/entities/insurances.entity";
+import { Payrolls } from "@/modules/payrolls/entities/payrolls.entity";
 
 @Entity({ name: 'Employees' })
 export class Employees {
@@ -43,6 +44,9 @@ export class Employees {
     @Column({ length: 15, unique: true, nullable: true })
     idCard?: string
 
+    @Column({ type: 'boolean', default: true })
+    isActive: true
+
     @Column({ unique: true })
     userId: number
 
@@ -74,4 +78,7 @@ export class Employees {
 
     @OneToOne(() => Insurances, insurance => insurance.employee)
     insurance: Insurances
+
+    @OneToMany(() => Payrolls, payroll => payroll.employee)
+    payrolls: Payrolls[]
 }
