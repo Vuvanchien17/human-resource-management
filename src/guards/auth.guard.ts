@@ -9,6 +9,7 @@ import Redis from "ioredis";
 import { InjectRedis } from "@nestjs-modules/ioredis";
 import { Users } from "@/modules/users/entities/users.entity";
 import { IEmployeesService } from "@/interfaces/employees.interface";
+import { Employees } from "@/modules/employees/entities/employees.entity";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -38,7 +39,7 @@ export class AuthGuard implements CanActivate {
         try {
             const payload = await this.jwtService.verifyAsync<IJwtPayload>(token);
             const currentUser = await this.usersService.findOneById(payload.sub) as Users;
-            const currentEmployee = await this.employeeService.findOneByUserId(currentUser.id);
+            const currentEmployee = await this.employeeService.findOneByCondition({ userId: currentUser.id }) as Employees;
             request['user'] = { id: currentUser?.id, role: currentUser?.role, employeeId: currentEmployee.id };
         } catch (error) {
             throw new UnauthorizedException("Unverified account");

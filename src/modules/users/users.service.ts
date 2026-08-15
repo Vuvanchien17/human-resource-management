@@ -18,6 +18,10 @@ export class UsersService {
         return await this.usersRepo.findOneBy({ id: id })
     }
 
+    async findOneByCondition(param): Promise<Users | null> {
+        return await this.usersRepo.findOneBy(param);
+    }
+
     async updatePassword(userId: number, newPassword: string): Promise<UpdateResult> {
         const newPasswordHash = await bcrypt.hash(newPassword, 10);
         return await this.usersRepo.update({ id: userId }, { password: newPasswordHash });

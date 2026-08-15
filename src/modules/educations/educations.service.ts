@@ -4,13 +4,11 @@ import { Educations } from './entities/educations.entity';
 import { CreateEducationsDto } from './dtos/createEducations.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Users } from '../users/entities/users.entity';
 import { UserRole } from '@/common/enum/role.enum';
 import { EMPLOYEE_SERVICE } from '@/common/constants/auth.const';
 import { IEmployeesService } from '@/interfaces/employees.interface';
 import { UpdateEducationDto } from './dtos/updateEducation.dto';
 import { IUserInRequest } from '@/common/types/user.type';
-import { CurrentUser } from '@/decorators/currentUser.decorator';
 
 @Injectable()
 export class EducationsService implements IEducationsService {
@@ -22,7 +20,7 @@ export class EducationsService implements IEducationsService {
     ) { }
 
     async createEducation(dto: CreateEducationsDto, id: number): Promise<Educations> {
-        const exist = await this.employeesService.findOneById(id);
+        const exist = await this.employeesService.findOneByCondition({ id: id });
         if (!exist) throw new NotFoundException("Resourse not found")
 
         return await this.educationRepo.save({ ...dto, employeeId: exist.id });

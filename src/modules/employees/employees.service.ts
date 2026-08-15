@@ -30,16 +30,12 @@ export class EmployeesService implements IEmployeesService {
         private readonly departmentsService: IDepartmentsService
     ) { }
 
-    async findOneByUserId(id: number): Promise<Employees> {
-        return await this.employeeRepo.findOneBy({ userId: id }) as Employees;
-    }
-
-    async findOneById(id: number): Promise<Employees> {
-        return await this.employeeRepo.findOneBy({ id: id }) as Employees;
+    async findOneByCondition(params): Promise<Employees | null> {
+        return await this.employeeRepo.findOneBy(params);
     }
 
     async createEmployee(dto: CreateEmployeesDto): Promise<Employees> {
-        const exist = await this.usersService.findOneByEmail(dto.email);
+        const exist = await this.usersService.findOneByCondition({ email: dto.email });
         if (exist) throw new ConflictException('Account existed');
 
         const queryRunner = this.dataSource.createQueryRunner();

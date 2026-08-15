@@ -1,4 +1,4 @@
-import { Module, ValidationPipe, Global } from '@nestjs/common';
+import { Module, ValidationPipe } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './modules/users/users.module';
@@ -20,7 +20,6 @@ import { DepartmentsModule } from './modules/departments/departments.module';
 import { SeederService } from './core/database/seed.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Users } from './modules/users/entities/users.entity';
-import { Educations } from './modules/educations/entities/educations.entity';
 import { EducationsModule } from './modules/educations/educations.module';
 import { Employees } from './modules/employees/entities/employees.entity';
 import { SkillsModule } from './modules/skills/skills.module';
@@ -65,17 +64,17 @@ import { PayrollsModule } from './modules/payrolls/payrolls.module';
     DepartmentsModule, TypeOrmModule.forFeature([Users, Employees]), EducationsModule, SkillsModule, LeavesModule, AttendancesModule, InsurancesModule, PayrollsModule
   ],
   controllers: [AppController],
-  providers: [AppService, {
-    provide: APP_GUARD,
-    useClass: AuthGuard
-  }, {
+  providers: [AppService,
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard
+    }, {
       provide: APP_GUARD,
       useClass: RolesGuard
     }, {
       provide: APP_FILTER,
       useClass: CatchEverythingFilter
-    },
-    {
+    }, {
       provide: APP_PIPE,
       useClass: ValidationPipe
     }, {
