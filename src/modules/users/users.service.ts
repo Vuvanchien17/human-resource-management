@@ -11,19 +11,39 @@ export class UsersService {
     constructor(@InjectRepository(Users) private readonly usersRepo: Repository<Users>) { }
 
     async findOneByEmail(email: string): Promise<Users | null> {
-        return await this.usersRepo.findOneBy({ email: email });
+        try {
+            return await this.usersRepo.findOneBy({ email: email });
+        } catch (error) {
+            console.log('UsersService.findOneByEmail error:', error);
+            throw error;
+        }
     }
 
     async findOneById(id: number): Promise<Users | null> {
-        return await this.usersRepo.findOneBy({ id: id })
+        try {
+            return await this.usersRepo.findOneBy({ id: id })
+        } catch (error) {
+            console.log('UsersService.findOneById error:', error);
+            throw error;
+        }
     }
 
     async findOneByCondition(param): Promise<Users | null> {
-        return await this.usersRepo.findOneBy(param);
+        try {
+            return await this.usersRepo.findOneBy(param);
+        } catch (error) {
+            console.log('UsersService.findOneByCondition error:', error);
+            throw error;
+        }
     }
 
     async updatePassword(userId: number, newPassword: string): Promise<UpdateResult> {
-        const newPasswordHash = await bcrypt.hash(newPassword, 10);
-        return await this.usersRepo.update({ id: userId }, { password: newPasswordHash });
+        try {
+            const newPasswordHash = await bcrypt.hash(newPassword, 10);
+            return await this.usersRepo.update({ id: userId }, { password: newPasswordHash });
+        } catch (error) {
+            console.log('UsersService.updatePassword error:', error);
+            throw error;
+        }
     }
 }

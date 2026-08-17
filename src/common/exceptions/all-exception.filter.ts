@@ -1,13 +1,13 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from "@nestjs/common";
 import { HttpAdapterHost } from '@nestjs/core';
-import { Request, Response } from "express";
+import { Request } from "express";
 import { DEFAULT_MESSAGE } from "../constants/auth.const";
 
 @Catch()
 export class CatchEverythingFilter implements ExceptionFilter {
+    private readonly logger = new Logger(CatchEverythingFilter.name)
     constructor(
         private readonly httpAdapterHost: HttpAdapterHost,
-        private readonly logger = new Logger(CatchEverythingFilter.name),
     ) { }
     catch(exception: unknown, host: ArgumentsHost): void {
         const { httpAdapter } = this.httpAdapterHost;

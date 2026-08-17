@@ -18,30 +18,39 @@ export class SeederService implements OnApplicationBootstrap {
     ) { }
 
     async onApplicationBootstrap() {
-        await this.seedUsers();
+        try {
+            await this.seedUsers();
+        } catch (error) {
+            console.log('SeederService.onApplicationBootstrap error:', error);
+            throw error;
+        }
     }
 
     public async seedUsers() {
-        const adminExists = await this.userRepository.findOneBy({ email: 'hieungo20052808@gmail.com' });
+        try {
+            const adminExists = await this.userRepository.findOneBy({ email: 'hieungo20052808@gmail.com' });
 
-        if (!adminExists) {
-            const hashedPassword = await bcrypt.hash('Vuvanchien2005', 10);
-            await this.userRepository.save({
-                email: 'hieungo20052808@gmail.com',
-                password: hashedPassword,
-                role: UserRole.ADMIN,
-            });
-            console.log('✅ Seeded default admin user!');
+            if (!adminExists) {
+                const hashedPassword = await bcrypt.hash('Vuvanchien2005', 10);
+                await this.userRepository.save({
+                    email: 'hieungo20052808@gmail.com',
+                    password: hashedPassword,
+                    role: UserRole.ADMIN,
+                });
+                console.log('✅ Seeded default admin user!');
+            }
+
+            // await this.employeeRepo.save({
+            //     fullName: "Vuvanchien",
+            //     position: "admin_system",
+            //     salary: 1000000,
+            //     departmentId: 1,
+            //     userId: 1,
+            //     code: "NV0002"
+            // })
+        } catch (error) {
+            console.log('SeederService.seedUsers error:', error);
+            throw error;
         }
-
-        // await this.employeeRepo.save({
-        //     fullName: "Vuvanchien",
-        //     position: "admin_system",
-        //     salary: 1000000,
-        //     departmentId: 1,
-        //     userId: 1,
-        //     code: "NV0002"
-        // })
-
     }
 }

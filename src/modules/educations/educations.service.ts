@@ -20,32 +20,47 @@ export class EducationsService implements IEducationsService {
     ) { }
 
     async createEducation(dto: CreateEducationsDto, id: number): Promise<Educations> {
-        const exist = await this.employeesService.findOneByCondition({ id: id });
-        if (!exist) throw new NotFoundException("Resourse not found")
+        try {
+            const exist = await this.employeesService.findOneByCondition({ id: id });
+            if (!exist) throw new NotFoundException("Resourse not found")
 
-        return await this.educationRepo.save({ ...dto, employeeId: exist.id });
+            return await this.educationRepo.save({ ...dto, employeeId: exist.id });
+        } catch (error) {
+            console.log('EducationsService.createEducation error:', error);
+            throw error;
+        }
     }
 
     async updateEducation(dto: UpdateEducationDto, id: number, currentUser: IUserInRequest): Promise<Educations> {
-        const exist = await this.educationRepo.findOneBy({ id: id });
-        if (!exist) throw new NotFoundException('Resource not found');
-        if (currentUser.employeeId !== exist.employeeId && currentUser.role !== UserRole.ADMIN) {
-            throw new ForbiddenException('You do not have permission')
-        }
+        try {
+            const exist = await this.educationRepo.findOneBy({ id: id });
+            if (!exist) throw new NotFoundException('Resource not found');
+            if (currentUser.employeeId !== exist.employeeId && currentUser.role !== UserRole.ADMIN) {
+                throw new ForbiddenException('You do not have permission')
+            }
 
-        return await this.educationRepo.save({
-            id: id,
-            ...dto,
-        })
+            return await this.educationRepo.save({
+                id: id,
+                ...dto,
+            })
+        } catch (error) {
+            console.log('EducationsService.updateEducation error:', error);
+            throw error;
+        }
     }
 
     async deleteEducation(id: number, currentUser: IUserInRequest): Promise<void> {
-        const exist = await this.educationRepo.findOneBy({ id: id });
-        if (!exist) throw new NotFoundException('Resource not found');
-        if (currentUser.employeeId !== exist.employeeId && currentUser.role !== UserRole.ADMIN) {
-            throw new ForbiddenException('You do not have permission')
-        }
+        try {
+            const exist = await this.educationRepo.findOneBy({ id: id });
+            if (!exist) throw new NotFoundException('Resource not found');
+            if (currentUser.employeeId !== exist.employeeId && currentUser.role !== UserRole.ADMIN) {
+                throw new ForbiddenException('You do not have permission')
+            }
 
-        await this.educationRepo.softDelete({ id: id });
+            await this.educationRepo.softDelete({ id: id });
+        } catch (error) {
+            console.log('EducationsService.deleteEducation error:', error);
+            throw error;
+        }
     }
 }

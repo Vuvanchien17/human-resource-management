@@ -41,38 +41,47 @@ export class AuthService implements IAuthService {
 
 
     async signIn(dto: SignInDto): Promise<ISignInResponse> {
-        const user = await this.usersService.findOneByEmail(dto.email);
-        if (!user) {
-            throw new UnauthorizedException('Email or password incorrect');
+        try {
+            const user = await this.usersService.findOneByEmail(dto.email);
+            if (!user) {
+                throw new UnauthorizedException('Email or password incorrect');
+            }
+
+            const isMatch = await bcrypt.compare(dto.password, user.password);
+            if (!isMatch) {
+                throw new UnauthorizedException('Email or password incorrect');
+            }
+
+            const payload = { sub: user.id }
+            const jwt = await this.jwtService.signAsync(payload);
+
+            const refreshTokenValue = crypto.randomBytes(64).toString("hex");
+
+            await this.refreshTokenRepo.save({
+                value: refreshTokenValue,
+                user: user,
+                expiredAt: new Date(Date.now() + parseInt(this.configService.get<string>('auth.REFRESH_TOKEN_TTL') || '604800000'))
+            })
+
+            return { token: jwt, refreshToken: refreshTokenValue };
+        } catch (error) {
+            console.log('AuthService.signIn error:', error);
+            throw error;
         }
-
-        const isMatch = await bcrypt.compare(dto.password, user.password);
-        if (!isMatch) {
-            throw new UnauthorizedException('Email or password incorrect');
-        }
-
-        const payload = { sub: user.id }
-        const jwt = await this.jwtService.signAsync(payload);
-
-
-        const refreshTokenValue = crypto.randomBytes(64).toString("hex");
-
-        await this.refreshTokenRepo.save({
-            value: refreshTokenValue,
-            user: user,
-            expiredAt: new Date(Date.now() + parseInt(this.configService.get<string>('auth.REFRESH_TOKEN_TTL') || '604800000'))
-        })
-
-        return { token: jwt, refreshToken: refreshTokenValue };
     }
 
     async signOut(refreshToken: string, token: string): Promise<void> {
-        const result = await this.refreshTokenRepo.softDelete({ value: refreshToken });
-        if (result.affected === 0) {
-            throw new NotFoundException();
-        }
+        try {
+            const result = await this.refreshTokenRepo.softDelete({ value: refreshToken });
+            if (result.affected === 0) {
+                throw new NotFoundException();
+            }
 
-        await this.blacklistTokenInRedis(token);
+            await this.blacklistTokenInRedis(token);
+        } catch (error) {
+            console.log('AuthService.signOut error:', error);
+            throw error;
+        }
     }
 
     private async blacklistTokenInRedis(token: string): Promise<void> {
@@ -88,77 +97,91 @@ export class AuthService implements IAuthService {
                 }
             }
         } catch (error) {
-            throw new InternalServerErrorException("Token invalid or expires");
+            console.log('AuthService.blacklistTokenInRedis error:', error);
+            throw error;
         }
     }
 
     async changePassword(dto: ChangePasswordDto, currentUser: IUserInRequest, token: string, refreshToken: string): Promise<void> {
-        const user = await this.usersService.findOneById(currentUser.id);
-        if (!user) throw new NotFoundException("User not exists");
+        try {
+            const user = await this.usersService.findOneById(currentUser.id);
+            if (!user) throw new NotFoundException("User not exists");
 
-        const isPasswordMatch = await bcrypt.compare(dto.oldPassword, user.password);
-        if (!isPasswordMatch) throw new BadRequestException("Old password is incorrect");
+            const isPasswordMatch = await bcrypt.compare(dto.oldPassword, user.password);
+            if (!isPasswordMatch) throw new BadRequestException("Old password is incorrect");
 
-        const result = await this.refreshTokenRepo.softDelete({ value: refreshToken });
-        if (result.affected === 0) {
-            throw new NotFoundException("Token not exists");
+            const result = await this.refreshTokenRepo.softDelete({ value: refreshToken });
+            if (result.affected === 0) {
+                throw new NotFoundException("Token not exists");
+            }
+
+            await this.blacklistTokenInRedis(token);
+
+            await this.usersService.updatePassword(currentUser.id, dto.newPassword);
+        } catch (error) {
+            console.log('AuthService.changePassword error:', error);
+            throw error;
         }
-
-        await this.blacklistTokenInRedis(token);
-
-        await this.usersService.updatePassword(currentUser.id, dto.newPassword);
     }
 
     async refreshAccessToken(refreshToken: string): Promise<LoginToken> {
-        const refreshTokenExist = await this.refreshTokenRepo.findOne({
-            where: { value: refreshToken },
-            relations: {
-                user: true,
+        try {
+            const refreshTokenExist = await this.refreshTokenRepo.findOne({
+                where: { value: refreshToken },
+                relations: {
+                    user: true,
+                }
+            });
+            if (!refreshTokenExist || refreshTokenExist.expiredAt.getTime() < Date.now()) {
+                throw new UnauthorizedException("Token expires or invalid")
             }
-        });
-        if (!refreshTokenExist || refreshTokenExist.expiredAt.getTime() < Date.now()) {
-            throw new UnauthorizedException("Token expires or invalid")
+
+            const payload = { sub: refreshTokenExist.user.id };
+            const jwt = await this.jwtService.signAsync(payload);
+
+            return { token: jwt };
+        } catch (error) {
+            console.log('AuthService.refreshAccessToken error:', error);
+            throw error;
         }
-
-        console.log(refreshTokenExist);
-        const payload = { sub: refreshTokenExist.user.id };
-        const jwt = await this.jwtService.signAsync(payload);
-
-        return { token: jwt };
     }
 
     async forgotPassword(email: string): Promise<void> {
-        const user = await this.usersService.findOneByEmail(email);
-        if (!user) throw new BadRequestException("Email is incorrect");
-
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-        const queryRunner = this.dataSourse.createQueryRunner();
-
         try {
-            await queryRunner.connect();
-            await queryRunner.startTransaction();
-            await queryRunner.manager.update(
-                Otps,
-                { email: email, deletedAt: IsNull() },
-                { deletedAt: new Date() }
-            )
+            const user = await this.usersService.findOneByEmail(email);
+            if (!user) throw new BadRequestException("Email is incorrect");
 
-            await queryRunner.manager.save(
-                Otps,
-                { email, otpCode: otp, expiresAt: new Date(Date.now() + TTL_OTP * 1000), }
-            )
-            await queryRunner.commitTransaction();
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+            const queryRunner = this.dataSourse.createQueryRunner();
+
+            try {
+                await queryRunner.connect();
+                await queryRunner.startTransaction();
+                await queryRunner.manager.update(
+                    Otps,
+                    { email: email, deletedAt: IsNull() },
+                    { deletedAt: new Date() }
+                )
+
+                await queryRunner.manager.save(
+                    Otps,
+                    { email, otpCode: otp, expiresAt: new Date(Date.now() + TTL_OTP * 1000), }
+                )
+                await queryRunner.commitTransaction();
+            } catch (error) {
+                console.log("Error transaction:", error);
+                await queryRunner.rollbackTransaction();
+                throw error;
+            } finally {
+                await queryRunner.release();
+            }
+
+            await this.sendOtpViaEmail(email, otp)
         } catch (error) {
-            console.log("Error transaction:", error);
-            await queryRunner.rollbackTransaction();
+            console.log('AuthService.forgotPassword error:', error);
             throw error;
-        } finally {
-            await queryRunner.release();
         }
-
-        await this.sendOtpViaEmail(email, otp)
-
     }
 
     private async sendOtpViaEmail(userEmail: string, otp: string) {
@@ -170,6 +193,7 @@ export class AuthService implements IAuthService {
                 html: otpTemplate(otp)
             });
         } catch (error) {
+            console.log('AuthService.sendOtpViaEmail error:', error);
             await this.dataSourse.manager.softDelete(
                 Otps,
                 { email: userEmail, expiresAt: IsNull() }
@@ -179,48 +203,51 @@ export class AuthService implements IAuthService {
     }
 
     async verifyOtp(otp: string, email: string): Promise<string> {
-        const exists = await this.otpsRepo.findOneBy({
-            email,
-            otpCode: otp
-        })
-
-
-        if (!exists) {
-            throw new BadRequestException("Otp is incorrect");
-        }
-
-        if (exists && exists.expiresAt.getTime() < Date.now()) {
-            throw new BadRequestException("Otp expires")
-        }
-
-        await this.otpsRepo.softDelete({
-            email,
-            otpCode: otp
-        })
-
-        const resetToken = crypto.randomBytes(64).toString("hex");
-        const resetTokenKey = `resetToken:${resetToken}`;
-        const ttl = this.configService.get<number>('auth.RESET_TOKEN_TTL') as number / 1000;
         try {
-            await this.redis.set(resetTokenKey, 'true', 'EX', ttl);
+            const exists = await this.otpsRepo.findOneBy({
+                email,
+                otpCode: otp
+            })
+            if (!exists) {
+                throw new BadRequestException("Otp is incorrect");
+            }
+            if (exists && exists.expiresAt.getTime() < Date.now()) {
+                throw new BadRequestException("Otp expires")
+            }
+            await this.otpsRepo.softDelete({
+                email,
+                otpCode: otp
+            })
+            const resetToken = crypto.randomBytes(64).toString("hex");
+            const resetTokenKey = `resetToken:${resetToken}`;
+            const ttl = this.configService.get<number>('auth.RESET_TOKEN_TTL') as number / 1000;
+            try {
+                await this.redis.set(resetTokenKey, 'true', 'EX', ttl);
+            } catch (error) {
+                console.log("Error set resetToken redis:", error);
+                throw error;
+            }
+            return resetToken;
         } catch (error) {
-            console.log("Error set resetToken redis:", error);
+            console.log('AuthService.verifyOtp error:', error);
             throw error;
         }
-        return resetToken;
     }
 
     async resetPassword(email: string, newPassword: string, resetToken: string): Promise<void> {
-        const user = await this.usersService.findOneByEmail(email);
-        if (!user) {
-            throw new BadRequestException("User not exist");
+        try {
+            const user = await this.usersService.findOneByEmail(email);
+            if (!user) {
+                throw new BadRequestException("User not exist");
+            }
+            const resetTokenKey = `resetToken:${resetToken}`
+            const exist = await this.redis.get(resetTokenKey);
+            if (!exist) throw new UnauthorizedException("No permission");
+            await this.usersService.updatePassword(user.id, newPassword);
+        } catch (error) {
+            console.log('AuthService.resetPassword error:', error);
+            throw error;
         }
-
-        const resetTokenKey = `resetToken:${resetToken}`
-        const exist = await this.redis.get(resetTokenKey);
-        if (!exist) throw new UnauthorizedException("No permission");
-
-        await this.usersService.updatePassword(user.id, newPassword);
     }
 
 }

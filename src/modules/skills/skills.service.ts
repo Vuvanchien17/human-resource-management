@@ -21,31 +21,46 @@ export class SkillsService implements ISkillsService {
     ) { }
 
     async createSkill(dto: CreateSkillDto, id: number): Promise<Skills> {
-        const exist = await this.employeesService.findOneById(id);
-        if (!exist) throw new NotFoundException('Resourse not found');
+        try {
+            const exist = await this.employeesService.findOneByCondition(id);
+            if (!exist) throw new NotFoundException('Resourse not found');
 
-        return await this.skillRepo.save({ ...dto, employeeId: exist.id });
+            return await this.skillRepo.save({ ...dto, employeeId: exist.id });
+        } catch (error) {
+            console.log('SkillsService.createSkill error:', error);
+            throw error;
+        }
     }
 
     async updateSkill(dto: UpdateSkillDto, id: number, currentUser: IUserInRequest): Promise<Skills> {
-        const exist = await this.skillRepo.findOneBy({ id: id });
-        if (!exist) throw new NotFoundException('Resourse not found');
+        try {
+            const exist = await this.skillRepo.findOneBy({ id: id });
+            if (!exist) throw new NotFoundException('Resourse not found');
 
-        if (currentUser.employeeId !== exist.employeeId && currentUser.role !== UserRole.ADMIN) {
-            throw new ForbiddenException('You do not have permission');
+            if (currentUser.employeeId !== exist.employeeId && currentUser.role !== UserRole.ADMIN) {
+                throw new ForbiddenException('You do not have permission');
+            }
+
+            return await this.skillRepo.save({ id: id, ...dto });
+        } catch (error) {
+            console.log('SkillsService.updateSkill error:', error);
+            throw error;
         }
-
-        return await this.skillRepo.save({ id: id, ...dto });
     }
 
     async deleteSkill(id: number, currentUser: IUserInRequest): Promise<void> {
-        const exist = await this.skillRepo.findOneBy({ id: id });
-        if (!exist) throw new NotFoundException('Resourse not found');
+        try {
+            const exist = await this.skillRepo.findOneBy({ id: id });
+            if (!exist) throw new NotFoundException('Resourse not found');
 
-        if (currentUser.employeeId !== exist.employeeId && currentUser.role !== UserRole.ADMIN) {
-            throw new ForbiddenException('You do not have permission');
+            if (currentUser.employeeId !== exist.employeeId && currentUser.role !== UserRole.ADMIN) {
+                throw new ForbiddenException('You do not have permission');
+            }
+
+            await this.skillRepo.softDelete({ id: id });
+        } catch (error) {
+            console.log('SkillsService.deleteSkill error:', error);
+            throw error;
         }
-
-        await this.skillRepo.softDelete({ id: id });
     }
 }

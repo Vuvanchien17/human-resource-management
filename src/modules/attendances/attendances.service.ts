@@ -17,13 +17,13 @@ export class AttendancesService implements IAttendancesService {
     ) { }
 
     async checkIn(employeeId: number): Promise<Attendances> {
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const companyStartTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0, 0);
-        let status = AttendanceStatus.PRESENT;
-        if (now > companyStartTime) status = AttendanceStatus.LATER;
-
         try {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const companyStartTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0, 0);
+            let status = AttendanceStatus.PRESENT;
+            if (now > companyStartTime) status = AttendanceStatus.LATER;
+
             const newAttendance = this.attendancesRepo.create({
                 date: today,
                 checkIn: now,
@@ -33,43 +33,54 @@ export class AttendancesService implements IAttendancesService {
 
             return await this.attendancesRepo.save(newAttendance)
         } catch (error: any) {
+            console.log('AttendancesService.checkIn error:', error);
             throw new ConflictException('You have already checked in today')
         }
     }
 
     async checkOut(employeeId: number): Promise<Attendances> {
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const attendance = await this.attendancesRepo.findOne({
-            where: {
-                employeeId: employeeId,
-                date: today,
-            },
-        });
+        try {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const attendance = await this.attendancesRepo.findOne({
+                where: {
+                    employeeId: employeeId,
+                    date: today,
+                },
+            });
 
-        if (!attendance) throw new NotFoundException('You have not checked in yet')
-        if (attendance.checkOut) throw new BadRequestException('You have already checked out today');
+            if (!attendance) throw new NotFoundException('You have not checked in yet')
+            if (attendance.checkOut) throw new BadRequestException('You have already checked out today');
 
-        attendance.checkOut = now;
+            attendance.checkOut = now;
 
-        return await this.attendancesRepo.save(attendance);
+            return await this.attendancesRepo.save(attendance);
+        } catch (error) {
+            console.log('AttendancesService.checkOut error:', error);
+            throw error;
+        }
     }
 
     async getAttendancesByEmployeeId(employeeId: number, filterDto: GetAttendancesFilterDto): Promise<Attendances[]> {
-        const exist = await this.employeesRepo.findOneBy({ id: employeeId });
+        try {
+            const exist = await this.employeesRepo.findOneBy({ id: employeeId });
 
-        if (!exist) throw new NotFoundException('Resourse not found');
+            if (!exist) throw new NotFoundException('Resourse not found');
 
-        const { month, year } = filterDto;
+            const { month, year } = filterDto;
 
-        const startDate = new Date(year, month - 1, 1, 0, 0, 0, 0);
-        const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+            const startDate = new Date(year, month - 1, 1, 0, 0, 0, 0);
+            const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
-        return await this.attendancesRepo.find({
-            where: {
-                employeeId: employeeId,
-                date: Between(startDate, endDate)
-            }
-        })
+            return await this.attendancesRepo.find({
+                where: {
+                    employeeId: employeeId,
+                    date: Between(startDate, endDate)
+                }
+            })
+        } catch (error) {
+            console.log('AttendancesService.getAttendancesByEmployeeId error:', error);
+            throw error;
+        }
     }
 }

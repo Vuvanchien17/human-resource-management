@@ -19,26 +19,41 @@ export class InsurancesService implements IInsurancesService {
     ) { }
 
     async createInsurance(dto: CreateInsuranceDto, id: number): Promise<Insurances> {
-        const exist = await this.employeesService.findOneById(id);
-        if (!exist) throw new NotFoundException('Resourse not found');
+        try {
+            const exist = await this.employeesService.findOneByCondition(id);
+            if (!exist) throw new NotFoundException('Resourse not found');
 
-        return await this.insurancesRepo.save({
-            ...dto,
-            employeeId: exist.id
-        })
+            return await this.insurancesRepo.save({
+                ...dto,
+                employeeId: exist.id
+            })
+        } catch (error) {
+            console.log('InsurancesService.createInsurance error:', error);
+            throw error;
+        }
     }
 
     async updateInsurance(dto: UpdateInsuranceDto, id: number): Promise<Insurances> {
-        const exist = await this.insurancesRepo.findOneBy({ id: id });
-        if (!exist) throw new NotFoundException('Resourse not found');
+        try {
+            const exist = await this.insurancesRepo.findOneBy({ id: id });
+            if (!exist) throw new NotFoundException('Resourse not found');
 
-        return await this.insurancesRepo.save({ id: id, ...dto });
+            return await this.insurancesRepo.save({ id: id, ...dto });
+        } catch (error) {
+            console.log('InsurancesService.updateInsurance error:', error);
+            throw error;
+        }
     }
 
     async deleteInsurance(id: number): Promise<void> {
-        const exist = await this.insurancesRepo.findOneBy({ id: id });
-        if (!exist) throw new NotFoundException('Resourse not found');
+        try {
+            const exist = await this.insurancesRepo.findOneBy({ id: id });
+            if (!exist) throw new NotFoundException('Resourse not found');
 
-        await this.insurancesRepo.softDelete({ id: id })
+            await this.insurancesRepo.softDelete({ id: id })
+        } catch (error) {
+            console.log('InsurancesService.deleteInsurance error:', error);
+            throw error;
+        }
     }
 }
